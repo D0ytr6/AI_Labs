@@ -1,5 +1,6 @@
 from collections import deque
-from graphs import graph_firstTask, graph_secTask
+from graphs import graph_firstTask, graph_secTask, Adjacency_Matrix
+from other import dfs
 import threading
 import time
 
@@ -22,7 +23,7 @@ def bfs(graph_to_search, start, end):
             return path
         # Перевіряємо чи не пройдений вже елемент
         elif vertex not in visited:
-            # отримуємо нові вершини і додаємо до черги
+            # отримуємо нові вершини і додаємо до черги/ отримуємо по ключу
             for current_neighbour in graph_to_search.get(vertex, []):
                 print(current_neighbour)
                 new_path = list(path)
@@ -34,34 +35,31 @@ def bfs(graph_to_search, start, end):
             # Додаємо до відвіданого
             visited.add(vertex)
 
+# Recursive search direct in depth
+def dfs_matrix(matrix:list, startRow, endPoint, visited: set, find:bool):
+    if find == False:
+        #  Проходимо вершини графаs
+        for node_index, node_list in enumerate(matrix):
+            # Перевіяємо чи не знайдено вершину
+            if startRow == endPoint:
+                print(f'Found search point {startRow}')
+                find = True
+                exit()
 
-# Recursive searching in deap
-def dfs(startPoint, searchPoint, graph, visited: list, way: set):
+            if (node_index + 1) == startRow:
+                visited.add(node_index + 1) # Помічаємо вершину як пройдену
 
-    # Перевіряємо вершини на рівність
-    if startPoint == searchPoint:
-        print(f'Find node {startPoint}')
-        # print(f'Current way {way}')
-        return True
-
-    if startPoint in visited:
-        return False
-
-    # додаємо до відвіданого
-    visited.append(startPoint)
-    # Проходим по вершинам
-    for node in graph[startPoint]:
-        print(node)
-        way.add(node)
-        if not node in visited:
-            # Рекурсивний запуск функції з іншими стартовим параметром
-            if dfs(node, searchPoint, graph, visited, way):
-                return True
-
-    return False
+                # Перевіряємо індекси і їх значення в кожній вершині
+                for index, edge in enumerate(node_list):
+                    if edge == 1:
+                        print(f'Node {node_index + 1} is connected to {index + 1}')
+                        if not (index + 1) in visited:
+                            # Запускаємо рекурсію
+                            if dfs_matrix(matrix, index + 1, endPoint, visited, find):
+                                return
 
 
-def bfs_bid(start, graph, search_queue, visited, end, middle_list: list):
+def search_bfs(start, graph, search_queue, visited, end, middle_list: list):
     search_queue += graph[start]
     while search_queue:
         # print(f'Search queue {search_queue}')
@@ -91,9 +89,9 @@ def bidirectional_search_bfs_based(startPoint, endPoint, graph, middle_list: lis
     visited_back = []
 
     # Створюємо потоки для кожного направлення
-    thread_dir = threading.Thread(target=bfs_bid,
+    thread_dir = threading.Thread(target=search_bfs,
                                   args=(startPoint, graph, searchQueue_direct, visited_dir, endPoint, middle_list,))
-    thread_back = threading.Thread(target=bfs_bid,
+    thread_back = threading.Thread(target=search_bfs,
                                    args=(endPoint, graph, searchQueue_backward, visited_back, startPoint, middle_list,))
     # Запускаємо потоки
     thread_dir.start()
@@ -110,8 +108,7 @@ def bidirectional_search_bfs_based(startPoint, endPoint, graph, middle_list: lis
 
 
 if(__name__ == "__main__"):
-    dfs('1', '13', graph_firstTask, [], set()) #deapth scan
-    # bfs('A', 'Z', graph_secTask) # breadth scan
-    # print(another(graph_secTask, 'A', 'Z'))
-    # bidirectional_search_bfs_based('A', 'K', graph2, ['G', 'E']) #bidirectional scan
+    dfs_matrix(Adjacency_Matrix, 1, 12, set(), False)
+    print(bfs(graph_secTask, 'A', 'Z'))
+    bidirectional_search_bfs_based('A', 'K', graph_secTask, ['G', 'E']) #bidirectional scan
 
