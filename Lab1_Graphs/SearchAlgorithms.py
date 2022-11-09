@@ -36,27 +36,48 @@ def bfs(graph_to_search, start, end):
             visited.add(vertex)
 
 # Recursive search direct in depth
-def dfs_matrix(matrix:list, startRow, endPoint, visited: set, find:bool):
+def dfs_matrix(matrix:list, startRow, endPoint, visited: set, find:bool, way: set):
     if find == False:
         #  Проходимо вершини графаs
         for node_index, node_list in enumerate(matrix):
             # Перевіяємо чи не знайдено вершину
             if startRow == endPoint:
                 print(f'Found search point {startRow}')
+                way.add(endPoint)
+                # print(visited)
+                print(f'Current way is {way}')
                 find = True
                 exit()
 
+            # Перевірка досягнення стартової вершини
             if (node_index + 1) == startRow:
                 visited.add(node_index + 1) # Помічаємо вершину як пройдену
+                way.add(node_index + 1)
 
+                edge_number = 0
+                ind_list = list()
+
+                count_end = 0
+                count_edge = 0
                 # Перевіряємо індекси і їх значення в кожній вершині
                 for index, edge in enumerate(node_list):
                     if edge == 1:
+                        edge_number = edge_number + 1
+                        ind_list.append(index + 1)
                         print(f'Node {node_index + 1} is connected to {index + 1}')
                         if not (index + 1) in visited:
+                            count_edge += 1
                             # Запускаємо рекурсію
-                            if dfs_matrix(matrix, index + 1, endPoint, visited, find):
-                                return
+                            if (dfs_matrix(matrix, index + 1, endPoint, visited, find, way)) == 1: # Повертає 1 у разі кінечної вершини
+                                count_end += 1 # Сумуємо кількість кінечних вершин в проміжних вершинах
+
+                if (count_end == count_edge): # Якщо кількість не пройдених вершин рівна кінечним вершинам
+                    way.remove(node_index + 1) # Вузол теж кінечний, видаляємо зі шляху
+                    return 1
+
+                # if edge_number == 1 and (node_index + 1) != endPoint:
+                #     way.remove(node_index + 1)
+                #     return 1
 
 
 def search_bfs(start, graph, search_queue, visited, end, middle_list: list):
@@ -108,7 +129,7 @@ def bidirectional_search_bfs_based(startPoint, endPoint, graph, middle_list: lis
 
 
 if(__name__ == "__main__"):
-    dfs_matrix(Adjacency_Matrix, 1, 12, set(), False)
-    print(bfs(graph_secTask, 'A', 'Z'))
-    bidirectional_search_bfs_based('A', 'K', graph_secTask, ['G', 'E']) #bidirectional scan
+    dfs_matrix(Adjacency_Matrix, 1, 10, set(), False, set())
+    # print(bfs(graph_secTask, 'A', 'Z'))
+    # bidirectional_search_bfs_based('A', 'K', graph_secTask, ['G', 'E']) #bidirectional scan
 
