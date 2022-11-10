@@ -129,7 +129,7 @@ def bidirectional_search_bfs_based(startPoint, endPoint, graph, middle_list: lis
 
 
 if(__name__ == "__main__"):
-    dfs_matrix(Adjacency_Matrix, 1, 10, set(), False, set())
+    dfs_matrix(Adjacency_Matrix, 1, 15, set(), False, set())
     # print(bfs(graph_secTask, 'A', 'Z'))
     # bidirectional_search_bfs_based('A', 'K', graph_secTask, ['G', 'E']) #bidirectional scan
 
