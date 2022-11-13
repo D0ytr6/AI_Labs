@@ -1,6 +1,7 @@
 import math
 import os
 import random
+import matplotlib.pyplot as plt
 
 POPULATION_SIZE = 8
 ONE_INDIVIDUAL_SIZE = 8
@@ -8,14 +9,23 @@ MAX_GENERATION = 50
 pt_crossover = 0.61
 pm_mutation = 0.01
 
-best = 0
 fit_value = []
+
+def getMiddleParents(values):
+    sum = 0
+    for value in values:
+        sum += value
+
+    sum = sum / POPULATION_SIZE
+    return sum
+
 
 # fitness score calculation ............
 def fitness_score():
-    global populations, best
-    global fit_value
-    fit_score = []
+    global populations
+    global fit_value, best_values
+    best = 0
+    fit_value = []
     for i in range(POPULATION_SIZE):
         chromosome_value = 0
         for j in range(ONE_INDIVIDUAL_SIZE - 1, -1, -1):
@@ -26,16 +36,22 @@ def fitness_score():
         fit_value.append(func_result)
 
     # sorting to grow
-    # fit_value, populations = zip(*sorted(zip(fit_value, populations), reverse=True))
+    fit_value, populations = zip(*sorted(zip(fit_value, populations), reverse=True))
     populations = list(populations)
-    # best = fit_value[0]
+    fit_value = list(fit_value)
+    sum_fit = getMiddleParents(fit_value)
+    best_values.append(sum_fit)
+    best = fit_value[0]
+    # best_values.append(best)
     # print(type(populations))
     print(f'fit_value {fit_value}')
     print(f'population {populations}')
     print(f'best value {best}')
 
+
 def selectparent():
     global parents, fit_value, populations
+    parents = []
     total_sum = sum(fit_value)
     print(f'sum {total_sum}')
     # find normalized form and create a list
@@ -51,78 +67,104 @@ def selectparent():
     print(f'normalized {normalized_fitness_form}')
     print(f'cumulative {cumulative_fitness_value}')
 
+    # Формуємо нову популяцію батьків для схрещування, розмір рівний розміру популяції
+    # Батьки можуть повторятися
     for count in range(POPULATION_SIZE):
+        # Крутимо рулетку, отримуємо число
         rand_numb = random.uniform(0, 1)
-        for score in cumulative_fitness_value:
+        individual_number = 0  # Номер батька
+        # Перевіряємо співпадання числа з батьком
+        for number_parent, score in enumerate(cumulative_fitness_value):
             if rand_numb <= score:
-                parents.append(populations[count])
+                # Додаємо батька у сформований список
+                parents.append(populations[-(number_parent + 1)])
                 break
 
-    print(f'parents {parents}')
-    for i in range(POPULATION_SIZE):
-        chromosome_value = 0
-        for j in range(ONE_INDIVIDUAL_SIZE - 1, -1, -1):
-            chromosome_value += parents[i][j] * (2 ** (7 - j))
-        print(f'chromosome_value in 10 system = {chromosome_value}')
+        individual_number += 1
+
+    print(f'parents len {len(parents)}')
+    # for i in range(POPULATION_SIZE):
+    #     chromosome_value = 0
+    #     for j in range(ONE_INDIVIDUAL_SIZE - 1, -1, -1):
+    #         chromosome_value += parents[i][j] * (2 ** (7 - j))
+    #     print(f'chromosome_value in 10 system = {chromosome_value}')
 
 
 def crossover2():
     global parents, fit_value
 
 
-
-
 def crossover():
     global parents
-    print(parents)
-    cross_point = random.randint(0, ONE_INDIVIDUAL_SIZE - 1)
-    print(cross_point)
-    rand_1 = random.randint(0, 7)
-    rand_2 = random.randint(0, 7)
-    fst_parent_bit = parents[rand_1][cross_point:]
-    sec_parent_bit = parents[rand_2][cross_point:]
-    print(parents[0])
-    print(fst_parent_bit)
+    #
+    pairs_count = int(len(parents) / 2)
+    for pair in range(pairs_count):
+        chanse_cross = random.randint(0, 100)
+        if(chanse_cross <= 61):
+            # Вибираємо точку для одноточкового обміну
+            cross_point = random.randint(0, ONE_INDIVIDUAL_SIZE - 1)
+            rand_1 = random.randint(0, 7)  # Перший батько
+            rand_2 = random.randint(0, 7)  # Другий батько
+            while rand_1 == rand_2:  #
+                rand_2 = random.randint(0, 7)
 
-    print(f'par 1 {parents[0]} par2 {parents[1]}')
-    new_parent1 = parents[rand_1][:cross_point] + sec_parent_bit
-    new_parent2 = parents[rand_2][:cross_point] + fst_parent_bit
-    print(new_parent1)
-    print(new_parent2)
-    parents[rand_1] = new_parent1
-    parents[rand_2] = new_parent2
-    # parents = parents + tuple([(parents[0][0:cross_point + 1] + parents[1][cross_point + 1:ONE_INDIVIDUAL_SIZE - 1])])
-    # parents = parents + tuple([(parents[1][0:cross_point + 1] + parents[0][cross_point + 1:ONE_INDIVIDUAL_SIZE - 1])])
-    print(f'updated parents {parents}')
+            # Формуємо частини для обміну
+            fst_parent_bit = parents[rand_1][cross_point:]
+            sec_parent_bit = parents[rand_2][cross_point:]
+
+            print(f'par 1 {parents[rand_1]} par2 {parents[rand_2]}')
+
+            # Створюємо нових батьків
+            new_parent1 = parents[rand_1][:cross_point] + sec_parent_bit
+            new_parent2 = parents[rand_2][:cross_point] + fst_parent_bit
+
+            # Видаляємо старих батьків, ті що не розмножилися залишаються в списку
+            if (rand_2 > rand_1):
+                parents.remove(parents[rand_2])
+                parents.remove(parents[rand_1])
+            else:
+                parents.remove(parents[rand_1])
+                parents.remove(parents[rand_2])
+
+            # Додаємо нових
+            parents.append(new_parent1)
+            parents.append(new_parent2)
+
+            print(f'updated parents {parents}')
 
 
-def mutation() :
+def mutation():
     global populations, parents
-    mute = random.randint(0, 49)
-    if mute == 20 :
-        x = random.randint(0, 1)
+    mute = random.randint(0, 100)
+    if mute <= 10:
+        x = random.randint(0, POPULATION_SIZE - 1)
         y = random.randint(0, ONE_INDIVIDUAL_SIZE - 1)
 
-        if(parents[x][y] == 1):
+        if parents[x][y] == 1:
             parents[x][y] = 0
+            print(f'Muted bit {parents[x][y]} in parent{parents[x]}')
 
         if parents[x][y] == 0:
             parents[x][y] = 1
+            print(f'Muted bit {parents[x][y]} in parent{parents[x]}')
 
     populations = parents
-    # print(populations)
 
 
 if __name__ == "__main__":
     # initialize population
     populations = [[random.randint(0, 1) for x in range(ONE_INDIVIDUAL_SIZE)] for i in range(POPULATION_SIZE)]
-    print(type(populations))
     parents = []
-    # new_populations = []
-    # print(populations)
-    #
-    for i in range(100):
+    best_values = []
+    for i in range(200):
         fitness_score()
         selectparent()
         crossover()
-    # mutation()
+        mutation()
+
+    print(best_values)
+    plt.plot(best_values, color="red")
+    plt.xlabel('Покоління')
+    plt.ylabel('Середня пристосованість')
+    plt.title('Середня пристосованість в залежності від покоління')
+    plt.show()
